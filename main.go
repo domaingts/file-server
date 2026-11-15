@@ -45,6 +45,39 @@ func main() {
 			fmt.Println("write body error", err)
 		}
 	})
+	mux.HandleFunc("GET /anywhere/{id}", func(w http.ResponseWriter, r *http.Request) {
+		path := os.Getenv("ANYWHERE_CONFIG_PATH")
+		if filepath == "" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		pass := r.PathValue("id")
+		if pass == "" || pass != password {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		ua := r.Header.Get("User-Agent")
+		if ua != "Anywhere" {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		format := r.Header.Get("X-Anywhere-Format")
+		if format != "ajson/1" {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		out, err := os.ReadFile(path)
+		if err != nil {
+			fmt.Println("read file error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, err = w.Write(out)
+		if err != nil {
+			fmt.Println("write body error", err)
+		}
+	})
 	port := ":8080"
 	fmt.Printf("starting the http server, port: %s\n", port)
 	panic(http.ListenAndServe(port, mux))
