@@ -1,4 +1,4 @@
-FROM golang:1.25.7-alpine3.22 AS builder
+FROM golang:1.27.4-alpine3.24 AS builder
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ COPY . .
 RUN CGO_ENABLED=0 go build -o file-server ./
 
 
-FROM alpine:3.22 AS dist
+FROM alpine:3.24 AS dist
 
 WORKDIR /app
 

@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -28,9 +29,14 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /clash/{id}", func(w http.ResponseWriter, r *http.Request) {
+		ua := r.Header.Get("User-Agent")
+		if !strings.Contains(ua, "FlClash") {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		pass := r.PathValue("id")
 		if pass == "" || pass != password {
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 		out, err := os.ReadFile(filepath)
@@ -51,19 +57,19 @@ func main() {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		pass := r.PathValue("id")
-		if pass == "" || pass != password {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
 		ua := r.Header.Get("User-Agent")
 		if ua != "Anywhere" {
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 		format := r.Header.Get("X-Anywhere-Format")
 		if format != "ajson/1" {
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		pass := r.PathValue("id")
+		if pass == "" || pass != password {
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 		out, err := os.ReadFile(path)
